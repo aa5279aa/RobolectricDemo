@@ -3,10 +3,10 @@
 一个使用Robolectric完成所有单元测试的项目，企业级脱敏开源项目，供同样搞单测的小伙伴参考。
 
 ## 前言
-作者本人目前在一家车载企业负责基础项目的搭建，最近负责搭建所在企业的单元测试框架。
-一开始尝试
-发现虽然网上单元测试的项目或者文章众多，但是很少又可用的，其原因，就是因为项目结构偏简单无法支撑起企业级项目复杂的结果，或者相关的文章太老，已经失去了参考的意义。
-
+作者最近负责搭建所在企业的单元测试框架。发现虽然网上单元测试的项目或者文章众多，但是实际上可以作为商用项目参考的，其实并不多。其原因主要因为如下两点：  
+1.项目结构偏简单，无法应对企业级项目复杂的场景，比如使用SO等。  
+2.项目或者文章太老旧，已经失去了参考的意义，网上这一类的文章，最多的往往还是15/16年写的。  
+所以，想打造一个能够覆盖大多数安卓单元测试场景的项目，来供同样想搞单元测试的小伙伴们来参考，欢迎star/fork/pr。
 
 
 # 一.单元测试介绍
@@ -110,11 +110,8 @@ public class MainActivityTest {
 
 **presenter逻辑梳理：**  
 1.onAttach方法进行页面绑定，验证点为：mView不为空。
-2.requestInfo方法发起请求，返回值会调用processInfoAndRefreshPage方法进行刷新。验证点为：1.发起请求：getDataInfo发起请求；2.调用processInfoAndRefreshPage方法；
-3.processInfoAndRefreshPage方法逻辑。，如果presenter为空，则不执行，不为空，则执行presenter.getHomeInfo()。  
-
-
-
+2.requestInfo方法发起请求，返回值会调用processInfoAndRefreshPage方法进行刷新。验证点为：1.发起请求：调用getDataInfo发起请求；2.调用processInfoAndRefreshPage方法；
+3.processInfoAndRefreshPage方法根据传参不同，执行不同的逻辑判断，然后刷新界面。验证点：1.infoModel.statusDesc==200时，调用mView.refreshPage()方法传值为true,否则为false；2.statusDesc = "success info"时，调用refreshPage方法传值为success info。
 
 # 五.常见问题
 ## 5.1常见问题汇总
