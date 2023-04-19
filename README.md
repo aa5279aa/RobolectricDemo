@@ -78,17 +78,22 @@ public class MainActivityTest {
 ```
 
 # 四.单测样例介绍
-这里，我们以MVPActivity界面为例介绍。  
-首先，我们介绍下MVPActivity界面的功能：  
+## MVP模式
+**相关代码：** 
+[mvp](https://github.com/aa5279aa/RobolectricDemo/blob/main/app/src/main/java/com/xt/robolectricdemo/mvp)
+
+**页面功能介绍：**  
 1.进入页面，注册自定义监听，退出页面，取消注册自定义监听。  
 2.首次进入或者回到页面的时候，请求数据并刷新页面，并且只请求一次。
 3.展示fragment。
 4.点击图标，会弹出dialog。
 
-详细代码参见：
+
+### Activity单元测试介绍
+**相关代码：** 
 [MVPActivity.java](https://github.com/aa5279aa/RobolectricDemo/blob/main/app/src/main/java/com/xt/robolectricdemo/mvp/MVPActivity.java)
 
-代码逻辑梳理：   
+**页面代码逻辑梳理：**  
 1.init()方法，里面主要做了5个逻辑。检查权限/调用presenter.getHomeInfo()方法/展示OrderListNewFragment页面/注册监听/更新图标。   
 2.onResume()方法，首次进入，不执行reloadData()，而后续调用onResume，则执行reloadData()。  
 3.getInfoAgain()方法，如果presenter为空，则不执行，不为空，则执行presenter.getHomeInfo()。  
@@ -98,6 +103,17 @@ public class MainActivityTest {
 
 汇总整理后，方法和验证点如下：
 ![整体效果图](img/unit_test_p2.png)
+
+###  presenter单元测试介绍
+**相关代码：** 
+[MVPPresenter.java](https://github.com/aa5279aa/RobolectricDemo/blob/main/app/src/main/java/com/xt/robolectricdemo/mvp/MVPPresenter.java)
+
+**presenter逻辑梳理：**  
+1.onAttach方法进行页面绑定，验证点为：mView不为空。
+2.requestInfo方法发起请求，返回值会调用processInfoAndRefreshPage方法进行刷新。验证点为：1.发起请求：getDataInfo发起请求；2.调用processInfoAndRefreshPage方法；
+3.processInfoAndRefreshPage方法逻辑。，如果presenter为空，则不执行，不为空，则执行presenter.getHomeInfo()。  
+
+
 
 
 # 五.常见问题
@@ -199,6 +215,33 @@ public class MVPActivityTest {
 ```
 这样，我们通过使用mock的presenter替换原有Activity中的presenter，从而方便我们对presenter中的相关方法进行验证，并且还不影响Activity的生命周期。
 
+### 4.解决单例类的mock问题
+虽然我们可以使用第一种的方案去mock整个单例类，但是这种mock的类，是不方便替换其中的方法。所以，对于单例类，我们可以使用替换getInstance方法的方式来进行替换。
+这里以DataAdapaterClient为例，相关类结构如下：
+```
+public class DataAdapaterClient {
+
+    Map<String, DataChangedListener> listenerMap = new HashMap<>();
+
+    public static DataAdapaterClient getInstance() {
+        return DataAdapaterClient.SingletonHolder.SINGLETON;
+    }
+
+    private static class SingletonHolder {
+        private static final DataAdapaterClient SINGLETON = new DataAdapaterClient();
+
+        private SingletonHolder() {
+        }
+    }
+ }
+```
+我们可以通过mock生成DataAdapaterClient对象，然后通过hook掉静态方法getInstance()，实现每次返回的都是我们mock后的ataAdapaterClient对象。相关代码如下：
+```
+        DataAdapaterClient mockClient = mock(DataAdapaterClient.class);
+        try (MockedStatic<DataAdapaterClient> ignored2 = mockStatic(DataAdapaterClient.class)) {
+            when(DataAdapaterClient.getInstance()).thenReturn(mockClient);
+	}
+```
 
 
 
