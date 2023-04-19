@@ -102,16 +102,19 @@ public class MainActivityTest {
 6.testUpdateErrorIv()方法，根据状态显示不同的图标。
 
 汇总整理后，方法和验证点如下：
-![整体效果图](img/unit_test_p2.png)
+![activity单测梳理](img/unit_test_p2.png)
 
 ###  presenter单元测试介绍
 **相关代码：** 
 [MVPPresenter.java](https://github.com/aa5279aa/RobolectricDemo/blob/main/app/src/main/java/com/xt/robolectricdemo/mvp/MVPPresenter.java)
 
 **presenter逻辑梳理：**  
-1.onAttach方法进行页面绑定，验证点为：mView不为空。
-2.requestInfo方法发起请求，返回值会调用processInfoAndRefreshPage方法进行刷新。验证点为：1.发起请求：调用getDataInfo发起请求；2.调用processInfoAndRefreshPage方法；
-3.processInfoAndRefreshPage方法根据传参不同，执行不同的逻辑判断，然后刷新界面。验证点：1.infoModel.statusDesc==200时，调用mView.refreshPage()方法传值为true,否则为false；2.statusDesc = "success info"时，调用refreshPage方法传值为success info。
+1.onAttach方法进行页面绑定，验证点为：mView不为空。  
+2.requestInfo方法发起请求，返回值会调用processInfoAndRefreshPage方法进行刷新。 
+3.processInfoAndRefreshPage方法根据传参不同，执行不同的逻辑判断，然后刷新界面。
+
+汇总整理后，方法和验证点如下：
+![presenter单测梳理](img/unit_test_p3.png)
 
 # 五.常见问题
 ## 5.1常见问题汇总
