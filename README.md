@@ -1,0 +1,2 @@
+# RobolectricDemo
+一个使用Robolectric完成所有单元测试的项目，企业级脱敏开源项目，供同样搞单测的小伙伴参考。
