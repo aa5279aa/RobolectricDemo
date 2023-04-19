@@ -34,7 +34,6 @@ public class MVPActivity extends FragmentActivity implements IMVPActivityContrac
         imgeView = findViewById(R.id.image_view);
         textDesc = findViewById(R.id.text_desc);
         presenter = new MVPPresenter();
-        presenter.onAttach(this);
         imgeView.setOnClickListener(this);
     }
 
@@ -48,9 +47,9 @@ public class MVPActivity extends FragmentActivity implements IMVPActivityContrac
 
     private void init() {
         new Handler().post(() -> {
+            presenter.onAttach(this);
             //refresh Activity page
             presenter.requestInfo();
-
             //show fragment
             MVPFragment fragment = new MVPFragment();
             getSupportFragmentManager().beginTransaction().replace(R.id.frame_layout, fragment).commitAllowingStateLoss();

@@ -53,7 +53,7 @@ public class MVPPresenterTest {
         DataSource mock = mock(DataSource.class);
         try (MockedStatic<DataSource> ignored = mockStatic(DataSource.class)) {
             when(DataSource.getInstance()).thenReturn(mock);
-            when(mock.getCachedUserVehicleInfo()).thenReturn(noNetWorkFlowable);
+            when(mock.getDataInfo()).thenReturn(noNetWorkFlowable);
             //这里，为什么线程中的内容没有执行？ 因为没有spy MainPresenter
 
             //为什么没有执行noNetWorkFlowable中的回调？

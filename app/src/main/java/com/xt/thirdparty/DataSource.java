@@ -26,17 +26,15 @@ public class DataSource {
      *
      * @return
      */
-    public Flowable<InfoModel> getCachedUserVehicleInfo() {
+    public Flowable<InfoModel> getDataInfo() {
         //this us jni
         Java2CJNI java2CJNI = new Java2CJNI();
         Log.i("SoView", java2CJNI.java2C());
-
         return Flowable.create(emitter -> {
             InfoModel infoModel = new InfoModel();
             infoModel.status = 100;
             infoModel.statusDesc = "fail";
             emitter.onNext(infoModel);
         }, BackpressureStrategy.BUFFER);
-
     }
 }

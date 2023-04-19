@@ -1,5 +1,6 @@
 package com.xt.robolectricdemo.mvp;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -9,12 +10,15 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import android.app.Dialog;
 import android.os.Build;
+import android.view.View;
 
 import androidx.fragment.app.Fragment;
 
 
 import com.xt.robolectricdemo.R;
+import com.xt.robolectricdemo.mock.SoViewMock;
 import com.xt.thirdparty.DataAdapaterClient;
 
 import org.junit.Before;
@@ -26,19 +30,85 @@ import org.robolectric.Robolectric;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.android.controller.ActivityController;
 import org.robolectric.annotation.Config;
+import org.robolectric.shadows.ShadowDialog;
 import org.robolectric.shadows.ShadowLooper;
+
+import java.util.List;
 
 /**
  * 替换MVPActivity中的MVPPresenter。
  * 针对方法进行单测
  */
-@Config(manifest = Config.NONE, sdk = Build.VERSION_CODES.P)
+@Config(shadows = {SoViewMock.class}, manifest = Config.NONE, sdk = Build.VERSION_CODES.P)
 @RunWith(RobolectricTestRunner.class)
 public class MVPActivityTest {
 
     @Before
     public void init() {
 
+    }
+
+    @Test
+    public void testInitView() {
+        ActivityController<MVPActivity> controller = Robolectric.buildActivity(MVPActivity.class);
+        //创建mock的Presenter
+        MVPPresenter mockPresenter = mock(MVPPresenter.class);
+        //mock掉Presenter的getHomeInfo()方法，使之不做任何操作。
+        Mockito.doAnswer(invocation -> {
+            //do nothing
+            return null;
+        }).when(mockPresenter).requestInfo();
+        //执行create生命周期，这时候，原始的Presenter会被创建。
+        MVPActivity activity = controller.create().start().get();
+        //注入mock的Presenter，替换掉原始的Presenter
+        activity.presenter = mockPresenter;
+        //执行resume的生命周期，并且显示
+        controller.postCreate(null).resume().visible().topActivityResumed(true);
+        //因为我们代码中，主线程有post操作，这里则去执行代码中的主线程任务
+        ShadowLooper shadowLooper = ShadowLooper.getShadowMainLooper();
+        shadowLooper.runToEndOfTasks();
+
+        //验证是否为空
+        assertNotNull(activity.findViewById(R.id.image_view));
+        assertNotNull(activity.findViewById(R.id.text_desc));
+        assertNotNull(activity.presenter);
+    }
+
+    /**
+     * 这里就是2对1的关系
+     */
+    @Test
+    public void testListener() {
+        DataAdapaterClient mockClient = mock(DataAdapaterClient.class);
+        try (MockedStatic<DataAdapaterClient> ignored2 = mockStatic(DataAdapaterClient.class)) {
+            when(DataAdapaterClient.getInstance()).thenReturn(mockClient);
+            ActivityController<MVPActivity> controller = Robolectric.buildActivity(MVPActivity.class);
+            //创建mock的Presenter
+            MVPPresenter mockPresenter = mock(MVPPresenter.class);
+            //mock掉Presenter的getHomeInfo()方法，使之不做任何操作。
+            Mockito.doAnswer(invocation -> {
+                //do nothing
+                return null;
+            }).when(mockPresenter).requestInfo();
+            //执行create生命周期，这时候，原始的Presenter会被创建。
+            MVPActivity activity = controller.create().start().get();
+            //注入mock的Presenter，替换掉原始的Presenter
+            activity.presenter = mockPresenter;
+            //执行resume的生命周期，并且显示
+            controller.postCreate(null).resume().visible().topActivityResumed(true);
+            //因为我们代码中，主线程有post操作，这里则去执行代码中的主线程任务
+            ShadowLooper shadowLooper = ShadowLooper.getShadowMainLooper();
+            shadowLooper.runToEndOfTasks();
+
+            //3.监听被注册
+            MVPActivity.AdapterListener adapterListener = activity.getAdapterListener();
+            assertNotNull(adapterListener);
+            verify(mockClient).registerDataNotifyListener("key", adapterListener);
+
+            //4.验证监听被移除
+            controller.destroy();
+            verify(mockClient).unRegisterDataNotifyListener(adapterListener);
+        }
     }
 
     /**
@@ -68,7 +138,6 @@ public class MVPActivityTest {
             mainActivity.presenter = mockPresenter;
             //执行resume的生命周期，并且显示
             controller.postCreate(null).resume().visible().topActivityResumed(true);
-
             //因为我们代码中，主线程有post操作，这里则去执行代码中的主线程任务
             ShadowLooper shadowLooper = ShadowLooper.getShadowMainLooper();
             shadowLooper.runToEndOfTasks();
@@ -117,7 +186,7 @@ public class MVPActivityTest {
     }
 
     @Test
-    public void testReloadData() {
+    public void testRefreshPage() {
         ActivityController<MVPActivity> controller = Robolectric.buildActivity(MVPActivity.class);
         //hook掉Presenter
         MVPPresenter mockPresenter = mock(MVPPresenter.class);
@@ -127,25 +196,40 @@ public class MVPActivityTest {
         }).when(mockPresenter).requestInfo();
         MVPActivity mainActivity = controller.create().start().get();
         mainActivity.presenter = mockPresenter;
-
-
         controller.postCreate(null).resume().visible().topActivityResumed(true);
-        verify(mockPresenter, times(1)).requestInfo();
+        ShadowLooper shadowLooper = ShadowLooper.getShadowMainLooper();
+        shadowLooper.runToEndOfTasks();
+
+        String msg = "success message";
+        mainActivity.refreshPage(true, msg);
+        assertEquals(mainActivity.imgeView.getVisibility(), View.VISIBLE);
+        assertEquals(mainActivity.textDesc.getText().toString(), msg);
+
+        msg = "fail message";
+        mainActivity.refreshPage(false, msg);
+        assertEquals(mainActivity.findViewById(R.id.image_view).getVisibility(), View.GONE);
+        assertEquals(mainActivity.textDesc.getText().toString(), msg);
     }
 
-    /**
-     * 上面已覆盖
-     */
     @Test
-    public void testInitDataListener() {
+    public void testOnClick() {
+        ActivityController<MVPActivity> controller = Robolectric.buildActivity(MVPActivity.class);
+        //hook掉Presenter
+        MVPPresenter mockPresenter = mock(MVPPresenter.class);
+        Mockito.doAnswer(invocation -> {
+            //do nothing
+            return null;
+        }).when(mockPresenter).requestInfo();
+        MVPActivity mainActivity = controller.create().start().get();
+        mainActivity.presenter = mockPresenter;
+        controller.postCreate(null).resume().visible().topActivityResumed(true);
+        ShadowLooper shadowLooper = ShadowLooper.getShadowMainLooper();
+        shadowLooper.runToEndOfTasks();
 
-    }
 
-    /**
-     * 上面已覆盖
-     */
-    @Test
-    public void testOnDestroy() {
-
+        View button = mainActivity.findViewById(R.id.image_view);
+        button.performClick();
+        List<Dialog> shownDialogs = ShadowDialog.getShownDialogs();
+        assertTrue(shownDialogs.size() >= 1);
     }
 }

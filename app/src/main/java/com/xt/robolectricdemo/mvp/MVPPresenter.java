@@ -20,7 +20,7 @@ public class MVPPresenter implements IMVPActivityContract.IMainActivityPresenter
     public void requestInfo() {
         //请求数据，订阅，并显示
         Consumer<InfoModel> consumer = this::processInfoAndRefreshPage;
-        Flowable<InfoModel> observable = DataSource.getInstance().getCachedUserVehicleInfo();
+        Flowable<InfoModel> observable = DataSource.getInstance().getDataInfo();
         Disposable disposable = observable
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
