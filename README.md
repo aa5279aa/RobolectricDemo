@@ -88,9 +88,7 @@ public class MainActivityTest {
 详细代码参见：
 [MVPActivity.java](https://github.com/aa5279aa/RobolectricDemo/blob/main/app/src/main/java/com/xt/robolectricdemo/mvp/MVPActivity.java)
 
-
-
-梳理代码逻辑：
+代码逻辑梳理：
 1.init()方法，里面主要做了5个逻辑。检查权限/调用presenter.getHomeInfo()方法/展示OrderListNewFragment页面/注册监听/更新图标。
 2.onResume()方法，首次进入，不执行reloadData()，而后续调用onResume，则执行reloadData()。  
 3.getInfoAgain()方法，如果presenter为空，则不执行，不为空，则执行presenter.getHomeInfo()。  
@@ -98,9 +96,8 @@ public class MainActivityTest {
 5.onDestroy方法，退出时取消注册监听。  
 6.testUpdateErrorIv()方法，根据状态显示不同的图标。
 
-汇总整理如下：
+汇总整理后，方法和验证点如下：
 ![整体效果图](img/unit_test_p2.png)
-
 
 
 # 五.常见问题
@@ -110,34 +107,24 @@ public class MainActivityTest {
 所以，更合适的方式是把相关的类进行mock替换掉。
 
 如果遇到业务使用到了SO文件，则需要进行mock。
-比如我们的BeanOKHttp中，就使用到了so库，所以，我们需要在上层就mock掉，使其不执行相关的请求和初始化操作。
-下面的代码，是来确保执行到CarservicesSpaceModule.getInstance().getEtcAccountInfoWithCacheC03()方法时，不去真的执行这个方法，而是直接返回noNetWorkFlowable对象。
+
+
 ```
-@Test
-public void testIvErrorState() {
-    Flowable<BaseEntity<EtcAccountInfoEntity>> noNetWorkFlowable = Flowable.create(emitter -> {
-        BaseEntity<EtcAccountInfoEntity> baseEntity = new BaseEntity<>();
-        EtcAccountInfoEntity accountInfoEntity = new EtcAccountInfoEntity();
-        accountInfoEntity.setStatus(CarServiceConstant.EtcStatus.ACCOUNT_BLACKLIST);
-        baseEntity.setCode("400");
-        baseEntity.setDescription("fail");
-        baseEntity.setData(accountInfoEntity);
-        emitter.onNext(baseEntity);
-    }, BackpressureStrategy.BUFFER);
-    CarservicesSpaceModule mock = mock(CarservicesSpaceModule.class);
-    try (MockedStatic<CarservicesSpaceModule> ignored = mockStatic(CarservicesSpaceModule.class)) {
-    when(CarservicesSpaceModule.getInstance()).thenReturn(mock);
-    when(CarservicesSpaceModule.getInstance().getEtcAccountInfoWithCacheC03()).thenReturn(noNetWorkFlowable);
-    //后面进行验证操作
- }
+
 ```
 ### 2.解决XML中View类引用SO问题
-如果XML引用了某个View的类，并且这个类引用了SO，则需要整体MOCK，并且这种mock，是无法通过依赖去解决的。
+如果XML引用了某个View的类，并且这个类使用到了SO，则需要整体这个View类。
 比如：SoView中使用到了SO文件。
 则会产生如下报错，因为
 ```
-Caused by: java.lang.UnsatisfiedLinkError: no Java2C in java.library.path: [/Users/liuxl1/Library/Java/Extensions, /Library/Java/Extensions, /Network/Library/Java/Extensions, /System/Library/Java/Extensions, /usr/lib/java, .]
+Caused by: java.lang.UnsatisfiedLinkError: no Java2C in java.library.path: [/Users/xxxx/Library/Java/Extensions, /Library/Java/Extensions, /Network/Library/Java/Extensions, /System/Library/Java/Extensions, /usr/lib/java, .]
 	at java.base/java.lang.ClassLoader.loadLibrary(ClassLoader.java:2670)
+```
+我们要整体替换掉这个使用SoView的类。
+首先，创建SoViewMock类，参考：[创建SoViewMock类.java](https://github.com/aa5279aa/RobolectricDemo/blob/main/app/src/main/java/com/xt/robolectricdemo/mvp/MVPActivity.java)
+其次，单元测试类中进行响应的配置，替换掉SoView类。相关代码如下：
+```
+@Config(shadows = {SoViewMock.class}, manifest = Config.NONE, sdk = Build.VERSION_CODES.P)
 ```
 
 
