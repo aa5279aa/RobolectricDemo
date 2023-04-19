@@ -94,12 +94,12 @@ public class MainActivityTest {
 [MVPActivity.java](https://github.com/aa5279aa/RobolectricDemo/blob/main/app/src/main/java/com/xt/robolectricdemo/mvp/MVPActivity.java)
 
 **页面代码逻辑梳理：**  
-1.init()方法，里面主要做了5个逻辑。检查权限/调用presenter.getHomeInfo()方法/展示OrderListNewFragment页面/注册监听/更新图标。   
-2.onResume()方法，首次进入，不执行reloadData()，而后续调用onResume，则执行reloadData()。  
-3.getInfoAgain()方法，如果presenter为空，则不执行，不为空，则执行presenter.getHomeInfo()。  
-4.initDataListener()方法，进入页面时注册监听。  
-5.onDestroy方法，退出时取消注册监听。  
-6.testUpdateErrorIv()方法，根据状态显示不同的图标。
+1.initView方法中，主要为初始化presenter，以及给成员变量中的view赋值；    
+2.initListener时，初始化listener，并且注册监听。onDestory时，取消注册；  
+3.init中，请求数据，并且注册fragment；  
+4.onResume中，非首次进入时要请求数据来刷新页面；  
+5.refreshPage中，根据所传数据，刷新当前页面；  
+6.onClick中，点击按钮，展示弹框。  
 
 汇总整理后，方法和验证点如下：
 ![activity单测梳理](img/unit_test_p2.png)
