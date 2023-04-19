@@ -246,11 +246,10 @@ public class DataAdapaterClient {
 
 
 
-## 5.2 常见排查手段
+## 5.2 常用手段
 1.使用GPT  
-2.百度/google
+2.百度/google  
 3.参照网上现有的项目，比如：https://github.com/ankidroid/Anki-Android
-
 
 
 # 六.参考文档
