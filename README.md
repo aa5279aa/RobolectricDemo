@@ -155,11 +155,11 @@ public class MainActivityTest {
 则我们可以通过mock对象MVPPresenter或DataSource来实现，从而避免请求到真正的getDataInfo()方法。
 相关单测代码如下：
 ```
-        MVPPresenter mockPresenter = mock(MVPPresenter.class);
-        Mockito.doAnswer(invocation -> {
-            //do nothing
-            return null;
-        }).when(mockPresenter).requestInfo();
+    MVPPresenter mockPresenter = mock(MVPPresenter.class);
+    Mockito.doAnswer(invocation -> {
+        //do nothing
+        return null;
+    }).when(mockPresenter).requestInfo();
 ```
 
 ### 2.解决XML中View类引用SO问题
@@ -170,8 +170,8 @@ public class MainActivityTest {
 Caused by: java.lang.UnsatisfiedLinkError: no Java2C in java.library.path: [/Users/xxxx/Library/Java/Extensions, /Library/Java/Extensions, /Network/Library/Java/Extensions, /System/Library/Java/Extensions, /usr/lib/java, .]
 	at java.base/java.lang.ClassLoader.loadLibrary(ClassLoader.java:2670)
 ```
-我们要整体替换掉这个使用SoView的类。
-首先，创建SoViewMock类，参考：[创建SoViewMock类.java](https://github.com/aa5279aa/RobolectricDemo/blob/main/app/src/main/java/com/xt/robolectricdemo/mvp/MVPActivity.java)
+我们要整体替换掉这个使用SoView的类。  
+首先，创建SoViewMock类，参考：[创建SoViewMock类.java](https://github.com/aa5279aa/RobolectricDemo/blob/main/app/src/test/java/com/xt/robolectricdemo/mock/SoViewMock.java)  
 其次，单元测试类中进行响应的配置，替换掉SoView类。相关代码如下：
 ```
 @Config(shadows = {SoViewMock.class}, manifest = Config.NONE, sdk = Build.VERSION_CODES.P)
@@ -179,9 +179,9 @@ Caused by: java.lang.UnsatisfiedLinkError: no Java2C in java.library.path: [/Use
 
 
 ### 3.解决Activity中成员变量mock问题
-我们Activity对象，一般要使用Robolectric构造的，而不能直接new，否则会不走Activity的生命周期。
-但是Activity中的成员变量，则需要使用mock的，因为只有mock的才能进行执行次数以及其它相关的验证，所以，如何替换Activity中的成员变量，就是一个我们要解决的问题。
-经过反复的尝试，最终发现了一个可行的方案，即MainActivity的onCreate()中经过handler转发后再使用成员变量进行相关操作，我们在观察到执行完onCreate()方法后，使用mock对象替换原始对象。
+我们Activity对象，一般要使用Robolectric构造的，而不能直接new，否则会不走Activity的生命周期。  
+但是Activity中的成员变量，则需要使用mock的，因为只有mock的才能进行执行次数以及其它相关的验证，所以，如何替换Activity中的成员变量，就是一个我们要解决的问题。  
+经过反复的尝试，最终发现了一个可行的方案，即MainActivity的onCreate()中经过handler转发后再使用成员变量进行相关操作，我们在观察到执行完onCreate()方法后，使用mock对象替换原始对象。  
 ```
 //原始类
 public class MVPActivity extends Activity{
@@ -213,23 +213,20 @@ public class MVPActivityTest {
 }
 
 ```
-这样，我们通过使用mock的presenter替换原有Activity中的presenter，从而方便我们对presenter中的相关方法进行验证，并且还不影响Activity的生命周期。
+这样，我们通过使用mock的presenter替换原有Activity中的presenter，从而方便我们对presenter中的相关方法进行验证，并且还不影响Activity的生命周期。  
 
 ### 4.解决单例类的mock问题
-虽然我们可以使用第一种的方案去mock整个单例类，但是这种mock的类，是不方便替换其中的方法。所以，对于单例类，我们可以使用替换getInstance方法的方式来进行替换。
+虽然我们可以使用第一种的方案去mock整个单例类，但是这种mock的类，是不方便替换其中的方法。所以，对于单例类，我们可以使用替换getInstance方法的方式来进行替换。  
 这里以DataAdapaterClient为例，相关类结构如下：
 ```
 public class DataAdapaterClient {
-
     Map<String, DataChangedListener> listenerMap = new HashMap<>();
-
     public static DataAdapaterClient getInstance() {
         return DataAdapaterClient.SingletonHolder.SINGLETON;
     }
 
     private static class SingletonHolder {
         private static final DataAdapaterClient SINGLETON = new DataAdapaterClient();
-
         private SingletonHolder() {
         }
     }
@@ -237,13 +234,12 @@ public class DataAdapaterClient {
 ```
 我们可以通过mock生成DataAdapaterClient对象，然后通过hook掉静态方法getInstance()，实现每次返回的都是我们mock后的ataAdapaterClient对象。相关代码如下：
 ```
-        DataAdapaterClient mockClient = mock(DataAdapaterClient.class);
+    DataAdapaterClient mockClient = mock(DataAdapaterClient.class);
         try (MockedStatic<DataAdapaterClient> ignored2 = mockStatic(DataAdapaterClient.class)) {
             when(DataAdapaterClient.getInstance()).thenReturn(mockClient);
-	}
+        }
+    }
 ```
-
-
 
 
 ## 5.2 常用手段
@@ -255,7 +251,7 @@ public class DataAdapaterClient {
 # 六.参考文档
 | 地址                                                                              | 介绍                                                            |
 |---------------------------------------------------------------------------------|---------------------------------------------------------------|
-| https://github.com/ankidroid/Anki-Android                                       | github上单测覆盖率最高的项目                                             |
+| https://github.com/ankidroid/Anki-Android                                       | github上单测覆盖率较高的项目                                             |
 | https://github.com/mockito/mockito                                              | github上mockito项目                                              |
 | https://github.com/robolectric/robolectric                                      | github上robolectric项目                                          |
 | https://github.com/powermock/powermock                                          | github上powermock项目                                            |
