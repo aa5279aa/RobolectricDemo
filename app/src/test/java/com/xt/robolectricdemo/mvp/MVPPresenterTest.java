@@ -38,7 +38,7 @@ public class MVPPresenterTest {
 
 
     @Test
-    public void testGetHomeInfo() {
+    public void testRequestInfo() {
         InfoModel accountInfoEntity = new InfoModel();
         accountInfoEntity.status = 200;
         accountInfoEntity.statusDesc = "success";
@@ -56,9 +56,9 @@ public class MVPPresenterTest {
             when(mock.getDataInfo()).thenReturn(noNetWorkFlowable);
             //这里，为什么线程中的内容没有执行？ 因为没有spy MainPresenter
 
-            //为什么没有执行noNetWorkFlowable中的回调？
+            //为什么没有执行noNetWorkFlowable中的回调？因为没有mock掉DataSource
 
-            //为什么没有执行getHomeInfo中的回调，但是执行了noNetWorkFlowable中的？因为主线程阻塞，所以无法执行
+            //为什么没有执行getHomeInfo中的回调，但是执行了noNetWorkFlowable中的？因为主线程阻塞，所以无法执行，通过runToEndOfTasks避免阻塞
             presenter.requestInfo();
             new Handler().postDelayed(() -> {
                 System.out.println("verify getHomeInfo");
@@ -71,7 +71,7 @@ public class MVPPresenterTest {
 
 
     @Test
-    public void testUpdateETCStats() {
+    public void testProcessInfoAndRefreshPage() {
         InfoModel entity = new InfoModel();
         entity.status = 101;
         entity.statusDesc = "fail1";
